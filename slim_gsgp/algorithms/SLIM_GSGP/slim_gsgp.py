@@ -144,7 +144,8 @@ class SLIM_GSGP:
         verbose=0,
         test_elite=False,
         log_path=None,
-        ffunction=None,
+        ffunction_train=None,
+        ffunction_test=None,
         max_depth=17,
         n_elites=1,
         reconstruct=True,
@@ -178,8 +179,11 @@ class SLIM_GSGP:
             Whether elite individuals should be tested. Default is False.
         log_path : str
             File path for saving log outputs. Default is None.
-        ffunction : function
-            Fitness function used to evaluate individuals. Default is None.
+        ffunction_train : function
+            Fitness function used to evaluate individuals on the training set and guide the evolutionary process. Default is None.
+        ffunction_test : function
+            Fitness function used to evaluate the elite individual on the test set.
+            This function does not influence the evolutionary process. Default is None.
         max_depth : int
             Maximum depth for the trees. Default is 17.
         n_elites : int
@@ -193,6 +197,12 @@ class SLIM_GSGP:
 
         if test_elite and (X_test is None or y_test is None):
             raise Exception('If test_elite is True you need to provide a test dataset')
+
+        if test_elite and ffunction_test is None:
+            raise ValueError("ffunction_test must be provided when test_elite=True.")        
+
+        if ffunction_train is None:
+            raise ValueError("ffunction_train must be provided.")
 
         # setting the seeds
         torch.manual_seed(self.seed)
@@ -226,7 +236,7 @@ class SLIM_GSGP:
         population.calculate_semantics(X_train)
 
         # evaluating the initial population
-        population.evaluate(ffunction, y=y_train, operator=self.operator, n_jobs=n_jobs)
+        population.evaluate(ffunction_train, y=y_train, operator=self.operator, n_jobs=n_jobs)
 
         end = time.time()
 
@@ -237,7 +247,7 @@ class SLIM_GSGP:
         if test_elite:
             population.calculate_semantics(X_test, testing=True)
             self.elite.evaluate(
-                ffunction, y=y_test, testing=True, operator=self.operator
+                ffunction_test, y=y_test, testing=True, operator=self.operator
             )
 
         # logging the results based on the log level
@@ -493,7 +503,7 @@ class SLIM_GSGP:
             offs_pop.calculate_semantics(X_train)
 
             # evaluating the offspring population
-            offs_pop.evaluate(ffunction, y=y_train, operator=self.operator, n_jobs=n_jobs)
+            offs_pop.evaluate(ffunction_train, y=y_train, operator=self.operator, n_jobs=n_jobs)
 
             # replacing the current population with the offspring population P = P'
             population = offs_pop
@@ -508,7 +518,7 @@ class SLIM_GSGP:
             if test_elite:
                 self.elite.calculate_semantics(X_test, testing=True)
                 self.elite.evaluate(
-                    ffunction, y=y_test, testing=True, operator=self.operator
+                    ffunction_test, y=y_test, testing=True, operator=self.operator
                 )
 
             # logging the results based on the log level
