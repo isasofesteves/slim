@@ -494,7 +494,7 @@ def gs_size(y_true, y_pred):
 
 def validate_inputs(X_train, y_train, X_test, y_test, pop_size, n_iter, elitism, n_elites, init_depth, log_path,
                     prob_const, tree_functions, tree_constants, log, verbose, minimization, n_jobs, test_elite,
-                    fitness_function, initializer, tournament_size):
+                    fitness_function_train, fitness_function_test, initializer, tournament_size):
     """
     Validates the inputs based on the specified conditions.
 
@@ -527,8 +527,10 @@ def validate_inputs(X_train, y_train, X_test, y_test, pop_size, n_iter, elitism,
        Level of detail to include in console output.
     minimization : bool, optional
         If True, the objective is to minimize the fitness function. If False, maximize it (default is True).
-    fitness_function : str, optional
-        The fitness function used for evaluating individuals (default is from gp_solve_parameters).
+    fitness_function_train : str, optional
+        The fitness function used for evaluating individuals on the training set (default is from gp_solve_parameters).
+    fitness_function_test : str, optional
+        The fitness function used for evaluating individuals on the test set (default is from gp_solve_parameters).
     initializer : str, optional
         The strategy for initializing the population (e.g., "grow", "full", "rhh").
     n_jobs : int, optional
@@ -607,8 +609,11 @@ def validate_inputs(X_train, y_train, X_test, y_test, pop_size, n_iter, elitism,
     if not isinstance(test_elite, bool):
         raise TypeError("test_elite must be a bool")
 
-    if not isinstance(fitness_function, str):
-        raise TypeError("fitness_function must be a str")
+    if not isinstance(fitness_function_train, str):
+        raise TypeError("fitness_function_train must be a str")
+
+    if not isinstance(fitness_function_test, str):
+        raise TypeError("fitness_function_test must be a str")
 
     if not isinstance(initializer, str):
         raise TypeError("initializer must be a str")
@@ -644,6 +649,7 @@ def check_slim_version(slim_version):
         return "mul", True, False
     else:
         raise Exception('Invalid SLIM configuration')
+
 
 def _evaluate_slim_individual(individual, ffunction, y, testing=False, operator="sum"):
     """
