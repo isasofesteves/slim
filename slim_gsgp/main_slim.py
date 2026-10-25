@@ -54,7 +54,8 @@ def slim(X_train: torch.Tensor, y_train: torch.Tensor, X_test: torch.Tensor = No
          log_level: int = slim_gsgp_solve_parameters["log"],
          verbose: int = slim_gsgp_solve_parameters["verbose"],
          reconstruct: bool = slim_gsgp_solve_parameters["reconstruct"],
-         fitness_function: str = slim_gsgp_solve_parameters["ffunction"],
+         fitness_function_train: str = slim_gsgp_solve_parameters["ffunction_train"],
+         fitness_function_test: str = slim_gsgp_solve_parameters["ffunction_test"],
          initializer: str = slim_gsgp_parameters["initializer"],
          minimization: bool = True,
          prob_const: float = slim_gsgp_pi_init["p_c"],
@@ -109,8 +110,10 @@ def slim(X_train: torch.Tensor, y_train: torch.Tensor, X_test: torch.Tensor = No
         Whether to store the structure of individuals. More computationally expensive, but allows usage outside the algorithm.
     minimization : bool, optional
         If True, the objective is to minimize the fitness function. If False, maximize it (default is True).
-    fitness_function : str, optional
-        The fitness function used for evaluating individuals (default is from gp_solve_parameters).
+    fitness_function_train : str, optional
+        The fitness function used for evaluating individuals on the training set (default is from gp_solve_parameters).
+    fitness_function_test : str, optional
+        The fitness function used for evaluating individuals on the test set (default is from gp_solve_parameters).
     initializer : str, optional
         The strategy for initializing the population (e.g., "grow", "full", "rhh").
     prob_const : float, optional
@@ -150,8 +153,8 @@ def slim(X_train: torch.Tensor, y_train: torch.Tensor, X_test: torch.Tensor = No
     validate_inputs(X_train=X_train, y_train=y_train, X_test=X_test, y_test=y_test, pop_size=pop_size, n_iter=n_iter,
                     elitism=elitism, n_elites=n_elites, init_depth=init_depth, log_path=log_path, prob_const=prob_const,
                     tree_functions=tree_functions, tree_constants=tree_constants, log=log_level, verbose=verbose,
-                    minimization=minimization, n_jobs=n_jobs, test_elite=test_elite, fitness_function=fitness_function,
-                    initializer=initializer, tournament_size=tournament_size)
+                    minimization=minimization, n_jobs=n_jobs, test_elite=test_elite, fitness_function_train=fitness_function_train,
+                    fitness_function_test=fitness_function_test, initializer=initializer, tournament_size=tournament_size)
 
     # Checking that both ms bounds are numerical
     assert isinstance(ms_lower, (int, float)) and isinstance(ms_upper, (int, float)), \
@@ -178,10 +181,13 @@ def slim(X_train: torch.Tensor, y_train: torch.Tensor, X_test: torch.Tensor = No
     # creating a list with the valid available fitness functions
     valid_fitnesses = list(fitness_function_options)
 
-    # assuring the chosen fitness_function is valid
-    assert fitness_function.lower() in fitness_function_options.keys(), \
-        "fitness function must be: " + f"{', '.join(valid_fitnesses[:-1])} or {valid_fitnesses[-1]}" \
+    # assuring the chosen fitness_function(s) are valid
+    assert fitness_function_train.lower() in fitness_function_options.keys(), \
+        "fitness function on train must be: " + f"{', '.join(valid_fitnesses[:-1])} or {valid_fitnesses[-1]}" \
             if len(valid_fitnesses) > 1 else valid_fitnesses[0]
+    assert fitness_function_test.lower() in fitness_function_options.keys(), \
+            "fitness function on test must be: " + f"{', '.join(valid_fitnesses[:-1])} or {valid_fitnesses[-1]}" \
+                if len(valid_fitnesses) > 1 else valid_fitnesses[0]
 
     # creating a list with the valid available initializers
     valid_initializers = list(initializer_options)
@@ -264,7 +270,8 @@ def slim(X_train: torch.Tensor, y_train: torch.Tensor, X_test: torch.Tensor = No
     slim_gsgp_solve_parameters["n_elites"] = n_elites
     slim_gsgp_solve_parameters["n_iter"] = n_iter
     slim_gsgp_solve_parameters['run_info'] = [slim_version, UNIQUE_RUN_ID, dataset_name]
-    slim_gsgp_solve_parameters["ffunction"] = fitness_function_options[fitness_function]
+    slim_gsgp_solve_parameters["ffunction_train"] = fitness_function_options[fitness_function_train]
+    slim_gsgp_solve_parameters["ffunction_test"] = fitness_function_options[fitness_function_test]
     slim_gsgp_solve_parameters["reconstruct"] = reconstruct
     slim_gsgp_solve_parameters["max_depth"] = max_depth
     slim_gsgp_solve_parameters["n_jobs"] = n_jobs
