@@ -50,7 +50,8 @@ valid_verbose = 1
 valid_minimization = True
 valid_n_jobs = 1
 valid_test_elite = False
-valid_fitness_function = "mean_squared_error"
+valid_fitness_function_train = "r2_score"
+valid_fitness_function_test = "mean_squared_error"
 valid_initializer = "random"
 
 valid_result = 53.71623611450195
